@@ -40,6 +40,8 @@ const io = new Server(server, {
     },
 });
 
+
+// running socket.io 
 io.on("connection", (socket) => {
     console.log("User connected : ", socket.id);
 
@@ -60,7 +62,6 @@ io.on("connection", (socket) => {
     socket.on("send_message", (data) => {
         socket.to(data.room).emit("receive_message", data);     // can use broadcast here if we want to share to everyone
     });
-
 
     socket.on("send_userdata", (data) => {
         socket.broadcast.emit("receive_userdata", data);

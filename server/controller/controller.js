@@ -1,18 +1,26 @@
 const user = require('../model/user');
 
-exports.register = (req, res) => {
+exports.register = async(req, res) => {
     if (!req.body) {
         res.status(400).json({ message: "Content can not be empty" });
         return
     }
+    const { name, email, password } = req.body;
+
+    const alreadyUser = await user.findOne({ email: email })
+    if (alreadyUser) {
+        console.log(user.findOne({ email: email }))
+        return res.status(400).json({ message: "user already exists" });
+    }
 
     // new user
     const newUser = new user({
-        name: req.body.name,
-        email: req.body.email,
-        password: req.body.password,
+        name,
+        email,
+        password
     });
     console.log(newUser);
+
 
     //save user in the database
     newUser.save(newUser)
@@ -33,8 +41,9 @@ exports.login = (req, res) => {
         res.status(400).json({ message: "Content can not be empty" });
         return
     }
+    const { email } = req.body;
 
-    const email = req.body.email;
+    console.log(email);
     user.findOne({ email })
         .then(user => {
             if (!user) {
@@ -52,7 +61,7 @@ exports.login = (req, res) => {
 exports.users = (req, res) => {
     user.find()
         .then(data => {
-            console.log('request successful'); 
+            console.log('request successful');
             if (data) {
                 res.status(200).json(data);
             } else {
@@ -69,9 +78,9 @@ exports.search = (req, res) => {
     if (!req.body) {
         return "Enter search Text";
     }
-    console.log(req.body.search);
-    const searchText = req.body.search;
-    user.find({ searchText })
+    const { email } = req.body;
+
+    user.findOne({ email })
         .then(data => {
             if (!data) {
                 console.log('data is not available');
