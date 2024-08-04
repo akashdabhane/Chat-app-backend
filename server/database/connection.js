@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const url = process.env.MongoDBUrl || "mongodb+srv://akashdabhane10:ERMteGrUFW88yCmm@cluster0.7ybtc37.mongodb.net/ChatApp?retryWrites=true&w=majority";  
+const url = process.env.MONGODB_URI || "mongodb+srv://akashdabhane10:ERMteGrUFW88yCmm@cluster0.7ybtc37.mongodb.net/ChatApp?retryWrites=true&w=majority"; 
 
 const connectDB = async () => {
     try {
@@ -10,8 +10,6 @@ const connectDB = async () => {
         console.log(`MongoDB connected: ${con.connection.host}`);
     } catch (error) {
         console.log('some error occured!'); 
-        // console.log(error);
-        // process.exit(1);
     }
 }
 

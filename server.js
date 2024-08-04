@@ -3,13 +3,17 @@ const cors = require('cors');
 const http = require('http');
 const { Server } = require('socket.io');
 const connectDB = require('./server/database/connection');
+const dotenv = require('dotenv');
+const { saveMessage } = require('./server/utils/saveMessage');
 // const morgan = require('mongan'); 
 // const bodyparser = require('body-parser'); 
 
 const app = express();
 
 // .env file 
-require("dotenv").config();
+dotenv.config({
+    path: './env'
+});
 
 // cross origin platform
 app.use(cors());
@@ -29,6 +33,7 @@ connectDB();
 
 // load router 
 app.use('/', require("./server/routes/router"));
+app.use('/', require("./server/routes/messagesRouter"));
 
 // http server holding express js instance
 const server = http.createServer(app);
@@ -51,16 +56,17 @@ io.on("connection", (socket) => {
 
     socket.on("leaveRoom", (roomName) => {
         socket.leave(roomName);
-        console.log('User left the room', roomName); 
-    }); 
+        console.log('User left the room', roomName);
+    });
 
     socket.on("join_room", (roomName) => {
         socket.join(roomName);
-        console.log('user join the room', roomName); 
+        console.log('user join the room', roomName);
     });
 
     socket.on("send_message", (data) => {
         socket.to(data.room).emit("receive_message", data);     // can use broadcast here if we want to share to everyone
+        saveMessage(data.userId, data.message, data.chatId); 
     });
 
     socket.on("send_userdata", (data) => {
@@ -71,7 +77,7 @@ io.on("connection", (socket) => {
 
 const port = process.env.PORT || 9000;
 server.listen(port, () => {
-    console.log('server is running on port ', port);
+    console.log('server is running on port', port);
 });
 
 

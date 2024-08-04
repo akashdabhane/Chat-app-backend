@@ -1,6 +1,6 @@
 const user = require('../model/user');
 
-exports.register = async(req, res) => {
+exports.register = async (req, res) => {
     if (!req.body) {
         res.status(400).json({ message: "Content can not be empty" });
         return
@@ -19,7 +19,6 @@ exports.register = async(req, res) => {
         email,
         password
     });
-    console.log(newUser);
 
 
     //save user in the database
@@ -43,7 +42,6 @@ exports.login = (req, res) => {
     }
     const { email } = req.body;
 
-    console.log(email);
     user.findOne({ email })
         .then(user => {
             if (!user) {
@@ -83,10 +81,8 @@ exports.search = (req, res) => {
     user.findOne({ email })
         .then(data => {
             if (!data) {
-                console.log('data is not available');
-                res.status(400).json("data is not available");
+                res.status(404).json({ message: "data is not available" });
             } else {
-                console.log(data);
                 res.status(200).send(data);
             }
         })
