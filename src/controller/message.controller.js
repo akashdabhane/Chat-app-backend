@@ -1,6 +1,9 @@
-const chatMessage = require('../model/chatMessage')
+const ChatMessage = require('../model/chatMessage.model')
+const asyncHandler = require('../utils/asyncHandler');
+const ApiError = require('../utils/ApiError');
+const ApiResponse = require('../utils/ApiResponse');
 
-exports.sendMessage = async (req, res) => {
+const sendMessage = async (req, res) => {
     const { chatId } = req.params;
     const { content } = req.body;
 
@@ -79,4 +82,22 @@ exports.sendMessage = async (req, res) => {
     return res
         .status(201)
         .json(201, receivedMessage, "Message saved successfully");
+}
+
+const saveMessage = asyncHandler(async() => {
+    const message = await ChatMessage.create({
+        sender: data.sender,
+        message: data.message,
+        attachments: data?.attachments,
+        chat: data.room
+    }); 
+
+    if(!message) {
+        throw new ApiError(500, 'Failed to save message');
+    }
+})
+
+module.exports = {
+    sendMessage,
+    saveMessage,
 }
