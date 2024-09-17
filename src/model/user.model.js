@@ -20,6 +20,7 @@ const userSchema = new mongoose.Schema({
     },
     profileImage: {
         type: String,
+        default: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSVTtlOwG_6l93Lo3NcGZcQpGx4LXNwa3lF5A&s"
     },
     refreshToken: {
         type: String,

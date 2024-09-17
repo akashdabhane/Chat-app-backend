@@ -1,5 +1,5 @@
 const ChatMessage = require("../model/chatMessage.model");
-// const { saveMesage } = require("../controller/message.controller");
+const { saveMessage } = require("../controller/message.controller");
 
 const initializeSocketIO = (io) => {
     io.on("connection", (socket) => {
@@ -28,7 +28,7 @@ const initializeSocketIO = (io) => {
         socket.on("send_message", (data) => {
             console.log('send dataa is :',data)
             // save message to database before sending it to all clients in the room
-            // saveMesage();
+            saveMessage(data.messageData);
 
             socket.to(data.roomName).emit("receive_message", data);     // can use broadcast here if we want to share to everyone
             

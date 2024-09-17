@@ -10,9 +10,7 @@ const chatSchema = new mongoose.Schema({
   },
   profileImage: {
     type: String, 
-    required: function () {
-      return this.isGroupChat; // `profileImage` is required only when `isGroupChat` is true
-    },
+    default: "https://media.istockphoto.com/id/1158561473/vector/three-persons-icon-black-vector.jpg?s=612x612&w=0&k=20&c=UvL4Nvz9nL4zi5RdjAabosuFer98suMTA-FheZ2KLlQ="
   },
   isGroupChat: {
     type: Boolean,

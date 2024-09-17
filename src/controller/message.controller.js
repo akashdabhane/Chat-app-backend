@@ -1,21 +1,21 @@
-const ChatMessage = require('../model/chatMessage.model')
+const ChatMessage = require('../model/chatMessage.model');
+const Chat = require('../model/chat.model');
 const asyncHandler = require('../utils/asyncHandler');
 const ApiError = require('../utils/ApiError');
 const ApiResponse = require('../utils/ApiResponse');
+const validateMongodbId = require('../utils/validateMongodbId');
 
-const sendMessage = async (req, res) => {
+// this function is responsible for sending all the messages of chats to which user is connected.
+const sendMessagesList = async (req, res) => {
     const { chatId } = req.params;
-    const { content } = req.body;
+    validateMongodbId(chatId);
 
-    if (!content && !req.files?.attachments?.length) {
-        throw new Error(400, "Message content or attachment is required");
+    const room = await Chat.findById(chatId);
+    if (!room) {
+        throw new ApiError(404, "Chat/room not found");
     }
 
-    const selectedChat = await chatMessage.findById(chatId);
-
-    // if (!selectedChat) {
-    //     throw new Error(404, "Chat does not exist");
-    // }
+    const messagesList = await ChatMessage.find({ chat: chatId });
 
     const messageFiles = [];
 
@@ -27,42 +27,6 @@ const sendMessage = async (req, res) => {
             });
         });
     }
-
-    // Create a new message instance with appropriate metadata
-    const message = await chatMessage.create({
-        sender: new mongoose.Types.ObjectId(req.body.sender),
-        content: content || "",
-        chat: new mongoose.Types.ObjectId(chatId),
-        attachments: messageFiles,
-    });
-
-    // update the chat's last message which could be utilized to show last message in the list item
-    // const chat = await chatMessage.findByIdAndUpdate(
-    //     chatId,
-    //     {
-    //         $set: {
-    //             lastMessage: message._id,
-    //         },
-    //     },
-    //     { new: true }
-    // );
-
-    // structure the message
-    // const messages = await chatMessage.aggregate([
-    //     {
-    //         $match: {
-    //             _id: new mongoose.Types.ObjectId(message._id),
-    //         },
-    //     },
-    //     ...chatMessageCommonAggregation(),
-    // ]);
-
-    // Store the aggregation result
-    // const receivedMessage = messages[0];
-
-    // if (!receivedMessage) {
-    //     throw new Error(500, "Internal server error");
-    // }
 
     // logic to emit socket event about the new message created to the other participants
     // chat.participants.forEach((participantObjectId) => {
@@ -84,20 +48,33 @@ const sendMessage = async (req, res) => {
         .json(201, receivedMessage, "Message saved successfully");
 }
 
-const saveMessage = asyncHandler(async() => {
-    const message = await ChatMessage.create({
-        sender: data.sender,
-        message: data.message,
-        attachments: data?.attachments,
-        chat: data.room
-    }); 
+// for saving the message into the database when user sends message to user user.
+const saveMessage = async (messageData) => {
+    const { author, message, room, time } = messageData;
 
-    if(!message) {
-        throw new ApiError(500, 'Failed to save message');
+    try {
+        const createMessage = await ChatMessage.create({
+            author: author,
+            message: message,
+            attachments: messageData?.attachments,
+            chat: room
+        });
+
+        await Chat.findByIdAndUpdate(room,
+            {
+                $set: {
+                    lastMessage: createMessage._id,
+                    updatedAt: new Date(),
+                }
+            }, { runValidators: true, new: true }
+        )
+    } catch (error) {
+        console.log(error)
+        // throw new ApiError(500, "Failed to update message")
     }
-})
+}
 
 module.exports = {
-    sendMessage,
+    sendMessagesList,
     saveMessage,
 }
