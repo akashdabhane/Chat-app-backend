@@ -171,7 +171,7 @@ const getMessagesList = asyncHandler(async (req, res) => {
     const endIndex = page * limit;
 
     const messages = await ChatMessage.find({ chat: chatId })
-        .sort({ createdAt: -1 })
+        // .sort({ createdAt: -1 })
         .limit(limit)
         .skip(startIndex)
         .populate({

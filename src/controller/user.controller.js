@@ -1,4 +1,5 @@
 const User = require('../model/user.model');
+const Chat = require('../model/chat.model');
 const asyncHandler = require('../utils/asyncHandler');
 const ApiError = require('../utils/ApiError');
 const ApiResponse = require('../utils/ApiResponse');
@@ -107,7 +108,7 @@ const getUser = asyncHandler(async (req, res) => {
     validateMongodbId(id);
 
     const user = await User.findById(id);
-    if(!user) {
+    if (!user) {
         throw new ApiError(404, "User not found");
     }
 
@@ -120,15 +121,47 @@ const getUser = asyncHandler(async (req, res) => {
 
 // search 
 const searchUser = asyncHandler(async (req, res) => {
-    const { email } = req.body;
-    if (!email) {
-        throw new ApiError(400, "Email is required");
+    const inputText = req.query.inputText;
+
+    const isEmail = (email) => {
+        // Regular expression to match a valid email format
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        // Test the email against the pattern
+        return emailPattern.test(email);
     }
 
-    const user = await User.findOne({ email });
-
-    if (!user) {
-        throw new ApiError(404, "User not found with this email");
+    let user;
+    if (isEmail(inputText)) {
+        // it will return only one user
+        user = await User.findOne({ email: inputText });
+    } else {
+        // it can return multiple users
+        user = await Chat.aggregate([
+            {
+                $match: {
+                    participants: {
+                        $in: [req.user._id]
+                    },
+                }
+            },
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "participants",
+                    foreignField: "_id",
+                    as: "participants",
+                }
+            },
+            {
+                $unwind: "$participants",
+            },
+            {
+                $match: {
+                    "participants.name": inputText
+                }
+            }
+        ])
     }
 
     return res
