@@ -114,10 +114,19 @@ const getConnectedChats = asyncHandler(async (req, res) => {
             }
         },
         {
-            // Step 2: Filter or project based on whether it's a group chat
+            // Step 2: Lookup to populate the lastMessage field
+            $lookup: {
+                from: 'chatmessages',
+                localField: 'lastMessage',
+                foreignField: '_id',
+                as: 'lastMessageDetails'
+            }
+        },
+        {
+            // Step 3: Filter or project based on whether it's a group chat
             $project: {
-                name: 1,                // Keep chat name
-                isGroupChat: 1,         // Keep group chat flag
+                name: 1,
+                isGroupChat: 1,
                 participants: {
                     $cond: {
                         if: { $eq: ['$isGroupChat', false] },  // If it's not a group chat
@@ -125,8 +134,10 @@ const getConnectedChats = asyncHandler(async (req, res) => {
                         else: '$participants'                 // Otherwise keep participants as is
                     }
                 },
-                lastMessage: 1,          // Keep the last message
-                admin: 1                 // Keep admin field
+                lastMessage: 1,
+                admin: 1,
+                'lastMessageDetails.createdAt': 1,
+                'lastMessageDetails.message': 1,
             }
         },
         {
