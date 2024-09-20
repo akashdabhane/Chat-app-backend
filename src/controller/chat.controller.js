@@ -73,32 +73,6 @@ const getOrCreateOneToOneRoom = asyncHandler(async (req, res) => {
 //         );
 // })
 
-const createGroupChat = asyncHandler(async (req, res) => {
-    const { name, isGroupChat, participants } = req.body;
-    const userId = req.user._id;
-
-    if (!name || name.trim() === "", name.trim() === undefined) {
-        throw new ApiError(400, "Name is required");
-    }
-
-    if (participants.length < 1) {
-        throw new ApiError(400, "At least two participants are required");
-    }
-
-    const createGroupChat = await Chat.create({
-        name,
-        isGroupChat,
-        participants: [userId, ...participants],
-        admin: userId,
-    })
-
-    return res
-        .status(201)
-        .json(
-            new ApiResponse(201, createGroupChat, "Group chat created successfully")
-        );
-})
-
 // list of users/groups where current user is as participant
 const getConnectedChats = asyncHandler(async (req, res) => {
     let currentUserId = req.user._id;

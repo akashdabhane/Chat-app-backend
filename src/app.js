@@ -23,9 +23,11 @@ app.use(cookieParser());
 const router = require("../src/routes/user.routes");
 const chatRouter = require("../src/routes/chat.routes");
 const adminRouter = require("../src/routes/admin.routes");
+const groupRouter = require("../src/routes/group.routes");
 
 app.use('/api/v1/users', router);
 app.use('/api/v1/chats', chatRouter);
-app.use('/api/v1/admin', adminRouter);
+app.use('/api/v1/admins', adminRouter);
+app.use('/api/v1/groups', groupRouter);
 
 module.exports = app;
