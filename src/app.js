@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const morgan = require('morgan'); 
+const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
 
 const app = express();
@@ -22,8 +22,10 @@ app.use(cookieParser());
 // import router 
 const router = require("../src/routes/user.routes");
 const chatRouter = require("../src/routes/chat.routes");
+const adminRouter = require("../src/routes/admin.routes");
 
 app.use('/api/v1/users', router);
 app.use('/api/v1/chats', chatRouter);
+app.use('/api/v1/admin', adminRouter);
 
 module.exports = app;
