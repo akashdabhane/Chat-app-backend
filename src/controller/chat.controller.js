@@ -48,36 +48,18 @@ const getOrCreateOneToOneRoom = asyncHandler(async (req, res) => {
         );
 })
 
-// const getOneToOneRoom = asyncHandler(async (req, res) => {
-//     const { otherUserId } = req.body;
-//     const userId = req.user._id;
-
-//     if (!otherUserId || otherUserId?.trim() === "" || otherUserId?.trim() === undefined) {
-//         throw new ApiError(400, "Other user ID is required");
-//     }
-
-//     const RoomInfo = await Chat.findOne({
-//         participants: {
-//             $in: [userId, otherUserId]
-//         },
-//     });
-
-//     if (!RoomInfo) {
-//         throw new ApiError(404, "No such chat found");
-//     }
-
-//     return res
-//         .status(200)
-//         .json(
-//             new ApiResponse(200, RoomInfo, "Chat found")
-//         );
-// })
-
 // list of users/groups where current user is as participant
 const getConnectedChats = asyncHandler(async (req, res) => {
     let currentUserId = req.user._id;
 
     const connectedChats = await Chat.aggregate([
+        {
+            $match: {
+                participants: {
+                    $in: [currentUserId]
+                },
+            }
+        },
         {
             // Step 1: Lookup user details for one-on-one chats only
             $lookup: {
@@ -173,7 +155,6 @@ const getMessagesList = asyncHandler(async (req, res) => {
 
 module.exports = {
     getOrCreateOneToOneRoom,
-    createGroupChat,
     getConnectedChats,
     getChatInfo,
     getMessagesList

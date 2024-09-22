@@ -13,4 +13,4 @@ adminRouter.route('/remove-participant').patch(removeParticipant);
 adminRouter.route('/create-admin').patch(createNewAdmin);
 adminRouter.route('/remove-admin-privileges').patch(removeAdminPrivileges);
 
-export default adminRouter;
+module.exports = adminRouter;

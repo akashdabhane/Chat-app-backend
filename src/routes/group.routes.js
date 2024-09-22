@@ -11,4 +11,4 @@ groupRouter.use(verifyJWT)
 groupRouter.route('/create-group-chat').post(createGroupChat);
 groupRouter.route('/get-all-group-users/:chatId').get(getAllGroupUsers);
 
-export default groupRouter;
+module.exports = groupRouter;

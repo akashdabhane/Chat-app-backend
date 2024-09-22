@@ -61,7 +61,7 @@ const userRegister = asyncHandler(async (req, res) => {
 });
 
 // login user
-const userLogin = async (req, res) => {
+const userLogin = asyncHandler(async (req, res) => {
     const { email, password } = req.body;
 
     if (
@@ -89,7 +89,7 @@ const userLogin = async (req, res) => {
         .json(
             new ApiResponse(200, { user: user, accessToken, refreshToken }, "User logged in successfully")
         )
-}
+})
 
 // get all the users
 const getAllUsers = asyncHandler(async (req, res) => {
@@ -135,6 +135,12 @@ const searchUser = asyncHandler(async (req, res) => {
     if (isEmail(inputText)) {
         // it will return only one user
         user = await User.findOne({ email: inputText });
+
+        function ensureArray(variable) {
+            return Array.isArray(variable) ? variable : [variable];
+        }
+
+        user = ensureArray(user);
     } else {
         // it can return multiple users
         user = await Chat.aggregate([
@@ -164,6 +170,7 @@ const searchUser = asyncHandler(async (req, res) => {
         ])
     }
 
+    console.log(user);
     return res
         .status(200)
         .json(

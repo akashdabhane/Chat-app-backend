@@ -43,7 +43,7 @@ const getAllGroupUsers = asyncHandler(async (req, res) => {
         throw new ApiError(404, "Chat/Group not found");
     }
 
-    const GroupUsersList = await Chat.findById(chatId).populate({ participants }).projection({});
+    const GroupUsersList = await Chat.findById(chatId).populate({ path: "participants" });
 
     return res
         .status(200)
