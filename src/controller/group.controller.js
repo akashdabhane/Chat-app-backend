@@ -5,6 +5,7 @@ const ApiError = require('../utils/ApiError');
 const ApiResponse = require('../utils/ApiResponse');
 const asyncHandler = require('../utils/asyncHandler');
 const validateMongodbId = require('../utils/validateMongodbId');
+const { uploadOnCloudinary, deleteFromCloudinary } = require('../utils/cloudinary');
 
 const createGroupChat = asyncHandler(async (req, res) => {
     const { name, isGroupChat, participants } = req.body;
@@ -52,7 +53,79 @@ const getAllGroupUsers = asyncHandler(async (req, res) => {
         )
 })
 
+// add a new member to the group
+const addNewGroupMember = asyncHandler(async (req, res) => {
+    const userId = req.user._id;
+    const { chatId, newUser } = req.body;
+    validateMongodbId(chatId);
+    validateMongodbId(newUser);
+
+    const groupInfo = await Chat.findById(chatId);
+
+    if (!groupInfo.admin.includes(userId)) {
+        throw new ApiError(401, "You are not allowed to add new members");
+    }
+
+    if (groupInfo.participants.includes(newUser)) {
+        return res.status(200).json(
+            new ApiResponse(200, {}, "User is already added")
+        )
+    }
+
+    const updatedGroupMember = await Chat.findByIdAndUpdate(chatId,
+        {
+            $push: {
+                participants: [newUser]
+            }
+        }, { new: true }
+    )
+
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(200, updatedGroupMember, "new user added to group")
+        )
+})
+
+// update group profile picture
+const updateGroupProfileImage = asyncHandler(async (req, res) => {
+    const chatId = req.params.chatId;
+    const userId = req.user._id;
+    const LocalPhotoPath = req.file?.path;
+
+    const groupInfo = await Chat.findById(chatId);
+    if (!groupInfo.admin.includes(userId)) {
+        throw new ApiError(401, "You are not allowed to update this group profile picture");
+    }
+
+    const photo = await uploadOnCloudinary(LocalPhotoPath);
+    if (!photo) {
+        throw new ApiError(500, "Failed to upload photo to cloudinary");
+    }
+
+    if (groupInfo?.profileImage) {
+        await deleteFromCloudinary(req.user.profileImage);
+    }
+
+    const updateProfilePhoto = await Chat.findByIdAndUpdate(chatId,
+        {
+            $set: {
+                profileImage: photo.secure_url,
+            }
+        },
+        { new: true }
+    )
+
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(200, { user: updateProfilePhoto }, "Group Profile photo updated successfully")
+        )
+})
+
 module.exports = {
     createGroupChat,
-    getAllGroupUsers
+    getAllGroupUsers,
+    addNewGroupMember,
+    updateGroupProfileImage
 };

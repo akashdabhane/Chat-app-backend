@@ -1,6 +1,6 @@
-const cloudinary = "cloudinary";
-const fs = "fs";
-const dotenv = "dotenv";
+const cloudinary = require("cloudinary");
+const fs = require("fs");
+const dotenv = require("dotenv");
 
 dotenv.config({ path: ".env" });  // Load environment variables from.env file
 
@@ -52,4 +52,7 @@ const deleteFromCloudinary = async (url) => {
     return deleteResponse;
 }
 
-export { uploadOnCloudinary, deleteFromCloudinary }
+module.exports = {
+    uploadOnCloudinary,
+    deleteFromCloudinary
+}

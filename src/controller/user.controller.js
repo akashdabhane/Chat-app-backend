@@ -5,6 +5,7 @@ const ApiError = require('../utils/ApiError');
 const ApiResponse = require('../utils/ApiResponse');
 const validateMongodbId = require("../utils/validateMongodbId");
 const dotenv = require("dotenv");
+const { uploadOnCloudinary, deleteFromCloudinary } = require('../utils/cloudinary');
 
 dotenv.config({
     path: './.env'
@@ -178,7 +179,36 @@ const searchUser = asyncHandler(async (req, res) => {
         )
 });
 
+// update user profile picture
+const updateUserProfileImage = asyncHandler(async (req, res) => {
+    const userId = req.user._id;
+    const LocalPhotoPath = req.file?.path;
+    
+    const photo = await uploadOnCloudinary(LocalPhotoPath);
+    if (!photo) {
+        console.log(photo)
+        throw new ApiError(500, "Failed to upload photo to cloudinary");
+    }
 
+    if (req.user?.profileImage) {
+        await deleteFromCloudinary(req.user.profileImage);
+    }
+
+    const updateProfilePhoto = await User.findByIdAndUpdate(userId,
+        {
+            $set: {
+                profileImage: photo.secure_url,
+            }
+        },
+        { new: true }
+    )
+
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(200, { user: updateProfilePhoto }, "Profile photo updated successfully")
+        )
+})
 
 
 module.exports = {
@@ -187,5 +217,6 @@ module.exports = {
     getAllUsers,
     getUser,
     searchUser,
+    updateUserProfileImage
 };
 
