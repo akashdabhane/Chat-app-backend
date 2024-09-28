@@ -20,7 +20,7 @@ const userSchema = new mongoose.Schema({
     },
     profileImage: {
         type: String,
-        default: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSVTtlOwG_6l93Lo3NcGZcQpGx4LXNwa3lF5A&s"
+        default: "https://res.cloudinary.com/domlldpib/image/upload/v1727176778/chat-app-m/ploxjqwlnefsbwyptzou.jpg"
     },
     refreshToken: {
         type: String,

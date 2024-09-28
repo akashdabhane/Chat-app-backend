@@ -6,6 +6,7 @@ const ApiResponse = require('../utils/ApiResponse');
 const asyncHandler = require('../utils/asyncHandler');
 const validateMongodbId = require('../utils/validateMongodbId');
 const { uploadOnCloudinary, deleteFromCloudinary } = require('../utils/cloudinary');
+const { DEFAULT_GROUPPROFILE_IMAGE } = require('../constants');
 
 const createGroupChat = asyncHandler(async (req, res) => {
     const { name, isGroupChat, participants } = req.body;
@@ -103,8 +104,8 @@ const updateGroupProfileImage = asyncHandler(async (req, res) => {
         throw new ApiError(500, "Failed to upload photo to cloudinary");
     }
 
-    if (groupInfo?.profileImage) {
-        await deleteFromCloudinary(req.user.profileImage);
+    if (groupInfo?.profileImage && groupInfo?.profileImage !== DEFAULT_GROUPPROFILE_IMAGE) {
+        await deleteFromCloudinary(groupInfo.profileImage);
     }
 
     const updateProfilePhoto = await Chat.findByIdAndUpdate(chatId,

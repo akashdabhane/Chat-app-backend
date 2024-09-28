@@ -6,6 +6,7 @@ const ApiResponse = require('../utils/ApiResponse');
 const validateMongodbId = require("../utils/validateMongodbId");
 const dotenv = require("dotenv");
 const { uploadOnCloudinary, deleteFromCloudinary } = require('../utils/cloudinary');
+const { DEFAULT_USERPROFILE_IMAGE } = require('../constants');
 
 dotenv.config({
     path: './.env'
@@ -190,7 +191,7 @@ const updateUserProfileImage = asyncHandler(async (req, res) => {
         throw new ApiError(500, "Failed to upload photo to cloudinary");
     }
 
-    if (req.user?.profileImage) {
+    if (req.user?.profileImage && req.user?.profileImage !== DEFAULT_USERPROFILE_IMAGE) {
         await deleteFromCloudinary(req.user.profileImage);
     }
 

@@ -9,8 +9,14 @@ const chatSchema = new mongoose.Schema({
     },
   },
   profileImage: {
-    type: String, 
-    default: "https://media.istockphoto.com/id/1158561473/vector/three-persons-icon-black-vector.jpg?s=612x612&w=0&k=20&c=UvL4Nvz9nL4zi5RdjAabosuFer98suMTA-FheZ2KLlQ="
+    type: String,
+    default: function () {
+      if (this.isGroupChat) {
+        return "https://res.cloudinary.com/domlldpib/image/upload/v1727176778/chat-app-m/ploxjqwlnefsbwyptzou.jpg";
+      }else {
+        return "";
+      }
+    }
   },
   isGroupChat: {
     type: Boolean,
