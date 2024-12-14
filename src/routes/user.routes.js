@@ -3,6 +3,7 @@ const router = express.Router();
 const {
     userRegister,
     userLogin,
+    loggedInUser,
     getAllUsers,
     searchUser,
     getUser,
@@ -13,6 +14,7 @@ const upload = require("../middlewares/multer.middleware");
 
 router.route('/register').post(userRegister);
 router.route('/login').post(userLogin);
+router.route('/logged-in-user').get(verifyJWT, loggedInUser);
 router.route('/').get(verifyJWT, getAllUsers);
 router.route('/search').get(verifyJWT, searchUser);
 router.route('/update-user-profile-picture').patch(verifyJWT, upload.single("profileImage"), updateUserProfileImage);

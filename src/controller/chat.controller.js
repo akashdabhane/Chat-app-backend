@@ -17,17 +17,12 @@ const getOrCreateOneToOneRoom = asyncHandler(async (req, res) => {
     const existingChat = await Chat.aggregate([
         {
             $match: {
-                participants: {
-                    $in: [userId, otherUserId]
-                },
-            }
-        },
-        {
-            $match: {
+                participants: { $all: [userId, otherUserId] },
                 isGroupChat: false
             }
         }
     ]);
+
 
     if (existingChat.length > 0) {
         return res

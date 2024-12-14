@@ -185,7 +185,7 @@ const searchUser = asyncHandler(async (req, res) => {
 const updateUserProfileImage = asyncHandler(async (req, res) => {
     const userId = req.user._id;
     const LocalPhotoPath = req.file?.path;
-    
+
     const photo = await uploadOnCloudinary(LocalPhotoPath);
     if (!photo) {
         console.log(photo)
@@ -212,10 +212,21 @@ const updateUserProfileImage = asyncHandler(async (req, res) => {
         )
 })
 
+const loggedInUser = asyncHandler(async (req, res) => {
+    const userId = req.user._id;
+    const user = await User.findById(userId);
+
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(200, user, "User fetched successfully")
+        )
+})
 
 module.exports = {
     userRegister,
     userLogin,
+    loggedInUser,
     getAllUsers,
     getUser,
     searchUser,

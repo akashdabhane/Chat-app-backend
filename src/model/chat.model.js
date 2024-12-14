@@ -1,6 +1,7 @@
 const mongoose = require('mongoose')
 
 const chatSchema = new mongoose.Schema({
+  // name, profileImage, admin is fields used when chat is GroupChat
   name: {
     type: String,
     minlength: 2,
