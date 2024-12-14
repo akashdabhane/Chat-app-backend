@@ -1,61 +1,23 @@
-const ChatMessage = require("../model/chatMessage.model");
 const { saveMessage } = require("../controller/message.controller");
 const { getConnectChatRoomsList } = require("../controller/socket.controller");
+const { ChatEventEnum } = require("../constants");
+// const Redis = require('ioredis');
+// const redis = new Redis(); // Default: connects to localhost:6379
 
 const initializeSocketIO = (io) => {
     io.on("connection", (socket) => {
-        console.log("User connected : ", socket.id);
+        // console.log("User connected : ", socket.id);
 
-        socket.on('send-active-flag', (data) => {
-            console.log('User is active', data);
-
-            socket.emit('receive-active-flag', data)        // to(getConnectChatRoomsList(data.userId))
-        })
-
-        socket.on('send-inactive-flag', (data) => {
-            console.log('User is inactive', data);
-
-            socket.emit('receive-inactive-flag', data)      // to(getConnectChatRoomsList(data.userId))
-        })
+        socket.on(ChatEventEnum.ACTIVE_FLAG, (data) => handleActiveFlag(socket, data));
+        socket.on(ChatEventEnum.INACTIVE_FLAG, (data) => handleInactiveFlag(socket, data));
+        socket.on(ChatEventEnum.JOIN_ROOM, (roomName) => handleJoinRoom(socket, roomName));
+        socket.on(ChatEventEnum.TYPING_FLAG, (data) => handleTypingFlag(socket, data));
+        socket.on(ChatEventEnum.STOP_TYPING_FLAG, (data) => handleStopTypingFlag(socket, data));
+        socket.on(ChatEventEnum.SEND_MESSAGE, (data) => handleSendMessage(socket, data));
 
         socket.on('disconnect', () => {
             console.log("User disconnected", socket.id);
         })
-
-        socket.on("join_room", async (roomName) => {
-            socket.join(roomName);
-            console.log('user join the room', roomName);
-
-            const chat = await ChatMessage.find({ chat: roomName });
-
-            socket.on('send-typing-flag', (data) => {
-                console.log('User is typing', data);
-                socket.to(data.roomName).emit('receive-typing-flag', data);
-            })
-
-            socket.on('send-typing-stop-flag', (data) => {
-                console.log('User stopped typing', data);
-                socket.to(data.roomName).emit('receive-typing-stop-flag', data);
-            })
-        });
-
-        socket.on("leaveRoom", (roomName) => {
-            socket.leave(roomName);
-            console.log('User left the room', roomName);
-        });
-
-        // leaveChatEvent(socket);
-
-        // mountJoinChatEvent(socket);
-
-        socket.on("send_message", (data) => {
-            console.log('send dataa is :', data)
-            // save message to database before sending it to all clients in the room
-            saveMessage(data.messageData);
-
-            socket.to(data.roomName).emit("receive_message", data);     // can use broadcast here if we want to share to everyone
-
-        });
 
         socket.on("send_userdata", (data) => {
             socket.broadcast.emit("receive_userdata", data);
@@ -63,24 +25,54 @@ const initializeSocketIO = (io) => {
     });
 }
 
-const mountJoinChatEvent = (socket) => {
+// commented code is of redis 
+const handleJoinRoom = async (socket, roomName) => {
+    console.log('user join the room', roomName);
+    socket.join(roomName);
 
+    // // Fetch current typing users in the room
+    // const typingUsers = await redis.hgetall(`typing:${roomName}`);
+
+    // // Send the current typing state to the newly joined user
+    // socket.emit("current_typing_state", typingUsers);
 }
 
-const leaveChatEvent = (socket) => {
-
+const handleActiveFlag = (socket, data) => {
+    console.log('User is active', data);
+    socket.broadcast.emit('receive-active-flag', data);
 }
 
-const mountParticipantTypingEvent = (socket) => {
-    socket.on(ChatEventEnum.TYPING_EVENT, (chatId) => {
-        socket.in(chatId).emit(ChatEventEnum.TYPING_EVENT, chatId);
-    });
+const handleInactiveFlag = (socket, data) => {
+    console.log('User is inactive', data);
+    socket.broadcast.emit('receive-inactive-flag', data);
 }
 
-const mountParticipantStoppedTypingEvent = (socket) => {
-    socket.on(ChatEventEnum.STOP_TYPING_EVENT, (chatId) => {
-        socket.in(chatId).emit(ChatEventEnum.STOP_TYPING_EVENT, chatId);
-    });
+const handleTypingFlag = async (socket, data) => {
+    console.log('User is typing', data);
+
+    // // Add the user to the room's typing state
+    // await redis.hset(`typing:${data.roomName}`, data.userId, true);
+
+    socket.to(data.roomName).emit('receive-typing-flag', data);
 }
+
+const handleStopTypingFlag = async (socket, data) => {
+    console.log('User stopped typing', data);
+
+    // // Remove the user from the room's typing state
+    // await redis.hdel(`typing:${data.roomName}`, data.userId);
+
+    socket.to(data.roomName).emit('receive-typing-stop-flag', data);
+}
+
+handleSendMessage = (socket, data) => {
+    console.log('send dataa is :', data)
+    // save message to database before sending it to all clients in the room
+    saveMessage(data.messageData);
+
+    // can use broadcast here if we want to share to everyone
+    socket.to(data.roomName).emit(ChatEventEnum.RECEIVE_MESSAGE, data);
+}
+
 
 module.exports = initializeSocketIO;
