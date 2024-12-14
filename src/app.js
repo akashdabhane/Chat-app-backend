@@ -8,7 +8,9 @@ const app = express();
 // cross origin platform
 app.use(cors({
     origin: ['http://localhost:3000', 'http://localhost:3001', "https://chatwithmi.vercel.app"],
-    credentials: true  // allow cookies from the client to be sent with the server's response
+    credentials: true,  // allow cookies from the client to be sent with the server's response
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 
 // log requests
