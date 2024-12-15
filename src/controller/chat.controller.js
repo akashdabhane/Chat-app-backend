@@ -99,11 +99,18 @@ const getConnectedChats = asyncHandler(async (req, res) => {
     ]);
 
 
-    return res
+    res
         .status(200)
         .json(
             new ApiResponse(200, connectedChats, "Connected users fetched successfully")
-        )
+        );
+
+    console.log(connectedChats);
+    for (let i = 0; i < connectedChats.length; i++) {
+        const chatId = connectedChats[i]._id;
+        // update status of messages to delivered
+        await ChatMessage.updateMany({ chat: chatId, status: "sent", author: { $ne: currentUserId } }, { status: 'delivered' });
+    }
 })
 
 // information of group and group members 
@@ -125,12 +132,15 @@ const getChatInfo = asyncHandler(async (req, res) => {
 
 // get messages list of a chat / previous messages store in database
 const getMessagesList = asyncHandler(async (req, res) => {
-    const { chatId } = req.params;
+    const { chatId, otherUserId } = req.query;
     const { page = 1, limit = 40 } = req.query;
     validateMongodbId(chatId);
+    validateMongodbId(otherUserId);
 
     const startIndex = (page - 1) * limit;
     const endIndex = page * limit;
+
+    await ChatMessage.updateMany({ chat: chatId, author: otherUserId, status: "delivered" }, { status: 'read' });
 
     const messages = await ChatMessage.find({ chat: chatId })
         // .sort({ createdAt: -1 })

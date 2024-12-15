@@ -11,6 +11,6 @@ chatRouter.use(verifyJWT);  // protect routes with JWT middleware
 
 chatRouter.route('/get-or-create-one-to-one-chat').post(getOrCreateOneToOneRoom);
 chatRouter.route('/get-connected-chats').get(getConnectedChats);
-chatRouter.route('/get-messages-list/:chatId').get(getMessagesList);
+chatRouter.route('/get-messages-list/').get(getMessagesList);
 
 module.exports = chatRouter; 
