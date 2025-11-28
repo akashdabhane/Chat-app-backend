@@ -9,12 +9,17 @@ const chatSchema = new mongoose.Schema({
       return this.isGroupChat; // `name` is required only when `isGroupChat` is true
     },
   },
+  newMessages: {
+    type: [mongoose.Schema.Types.ObjectId],
+    ref: "ChatMessage",
+    default: []
+  },
   profileImage: {
     type: String,
     default: function () {
       if (this.isGroupChat) {
         return "https://res.cloudinary.com/domlldpib/image/upload/v1727176778/chat-app-m/ploxjqwlnefsbwyptzou.jpg";
-      }else {
+      } else {
         return "";
       }
     }

@@ -3,10 +3,20 @@ const { getConnectChatRoomsList } = require("../controller/socket.controller");
 const { ChatEventEnum } = require("../constants");
 // const Redis = require('ioredis');
 // const redis = new Redis(); // Default: connects to localhost:6379
+// const onlineUsers = new Set();
 
 const initializeSocketIO = (io) => {
     io.on("connection", (socket) => {
         // console.log("User connected : ", socket.id);
+
+        // socket.on("user-online", (userId) => {
+        //     console.log(userId)
+        //     socket.userId = userId;  // ← store user id inside socket object
+        //     onlineUsers.add(userId);
+        //     console.log(onlineUsers)
+
+        //     io.emit("active-users", [...onlineUsers]);  // broadcast to everyone
+        // });
 
         socket.on(ChatEventEnum.ACTIVE_FLAG, (data) => handleActiveFlag(socket, data));
         socket.on(ChatEventEnum.INACTIVE_FLAG, (data) => handleInactiveFlag(socket, data));
@@ -17,6 +27,13 @@ const initializeSocketIO = (io) => {
 
         socket.on('disconnect', () => {
             console.log("User disconnected", socket.id);
+
+            // // find which user disconnected
+            // // Usually store userId inside socket object for this
+            // if (socket.userId) {
+            //     onlineUsers.delete(socket.userId);
+            //     io.emit("active-users", [...onlineUsers]);
+            // }
         })
 
         socket.on("send_userdata", (data) => {

@@ -9,14 +9,9 @@ const chatMessageSchema = new mongoose.Schema({
     message: {
         type: String,
     },
-    attachments: {
-        type: [
-            {
-                url: String,
-                localPath: String,
-            },
-        ],
-        default: [],
+    attachment: {
+        type: String,
+        default: "",
     },
     status: {
         type: String,

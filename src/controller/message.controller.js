@@ -56,7 +56,7 @@ const saveMessage = async (messageData) => {
         const createMessage = await ChatMessage.create({
             author: author,
             message: message,
-            attachments: messageData?.attachments,
+            attachments: messageData?.attachment,
             chat: room
         });
 

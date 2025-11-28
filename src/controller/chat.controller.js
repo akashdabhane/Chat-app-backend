@@ -5,6 +5,7 @@ const ApiError = require('../utils/ApiError');
 const ApiResponse = require('../utils/ApiResponse');
 const asyncHandler = require('../utils/asyncHandler');
 const validateMongodbId = require('../utils/validateMongodbId');
+const mongoose = require('mongoose');
 
 const getOrCreateOneToOneRoom = asyncHandler(async (req, res) => {
     const { otherUserId } = req.body;
@@ -36,17 +37,25 @@ const getOrCreateOneToOneRoom = asyncHandler(async (req, res) => {
         participants: [userId, otherUserId],
     });
 
+    console.log(newChat)
+    const data = await Chat.findById(newChat._id).populate({
+        path: "participants",
+        select: "-password"
+    });
+    console.log(data)
+
     return res
         .status(201)
         .json(
-            new ApiResponse(201, newChat, "Chat created successfully")
+            new ApiResponse(201, data, "Chat created successfully")
         );
 })
 
 // list of users/groups where current user is as participant
 const getConnectedChats = asyncHandler(async (req, res) => {
-    let currentUserId = req.user._id;
-
+    const currentUserId = req.user._id;
+    // const userId = new mongoose.Types.ObjectId(currentUserId);
+    // console.log(currentUserId, userId);
     const connectedChats = await Chat.aggregate([
         {
             $match: {
@@ -74,10 +83,27 @@ const getConnectedChats = asyncHandler(async (req, res) => {
             }
         },
         {
-            // Step 3: Filter or project based on whether it's a group chat
+            // Step 3: Lookup messages for the chat
+            $lookup: {
+                from: 'chatmessages',
+                localField: '_id',       // Match Chat's ID
+                foreignField: 'chat', // Match Message's chatId
+                as: 'messages',
+            },
+        },
+        {
+            // Step 4: Sort messages by creation time descending
+            $addFields: {
+                messages: { $reverseArray: '$messages' }, // Reverse to start from last created message
+            },
+        },
+        {
+            // Step 5: Filter or project based on whether it's a group chat
             $project: {
                 name: 1,
                 isGroupChat: 1,
+                lastMessage: 1,
+                admin: 1,
                 participants: {
                     $cond: {
                         if: { $eq: ['$isGroupChat', false] },  // If it's not a group chat
@@ -85,10 +111,23 @@ const getConnectedChats = asyncHandler(async (req, res) => {
                         else: '$participants'                 // Otherwise keep participants as is
                     }
                 },
-                lastMessage: 1,
-                admin: 1,
                 'lastMessageDetails.createdAt': 1,
                 'lastMessageDetails.message': 1,
+                newMessageCount: {
+                    $size: {
+                        $filter: {
+                            input: '$messages', // The array to filter
+                            as: 'message',
+                            cond: {
+                                $and: [
+                                    { $ne: ['$message.author', new mongoose.Types.ObjectId(currentUserId)] }, // Not sent by the current user
+                                    { $in: ['$message.status', ['sent', 'delivered']] }, // Status is 'sent' or 'delivered'
+                                ],
+                            },
+                        },
+                    },
+                },
+                debugMessages: { $slice: ['$messages', 5] }, // Debug first 5 messages
             }
         },
         {
@@ -97,7 +136,7 @@ const getConnectedChats = asyncHandler(async (req, res) => {
             }
         }
     ]);
-
+    // console.log(connectedChats)
 
     res
         .status(200)
@@ -105,7 +144,7 @@ const getConnectedChats = asyncHandler(async (req, res) => {
             new ApiResponse(200, connectedChats, "Connected users fetched successfully")
         );
 
-    console.log(connectedChats);
+    // console.log(connectedChats);
     for (let i = 0; i < connectedChats.length; i++) {
         const chatId = connectedChats[i]._id;
         // update status of messages to delivered
